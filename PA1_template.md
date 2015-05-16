@@ -31,7 +31,8 @@ dailySteps <- activity %>%
   summarise(numSteps = sum(steps)) %>%
   mutate(Mean = mean(numSteps), Median = median(numSteps))
 ```
-It might be best to just calculate mean() once and not have it as a var in dailySteps
+Mean = 10766.19
+Median = 10765
 
 Let's look at some summary statistics for the activity
 
