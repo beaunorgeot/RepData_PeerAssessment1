@@ -12,7 +12,8 @@ This project document makes use of data from a personal activity monitoring devi
 
 # Let's load and Process the data
 
-```{r, message=FALSE}
+
+```r
 library(dplyr)
 library(ggplot2)
 
@@ -22,7 +23,8 @@ activity <- tbl_df(read.csv("activity.csv"))
 
 # What is mean total number of steps taken per day?
 
-```{r}
+
+```r
 dailySteps <- activity %>%
   filter(!is.na(steps)) %>%
   group_by(date) %>%
@@ -32,20 +34,36 @@ dailySteps <- activity %>%
 It might be best to just calculate mean() once and not have it as a var in dailySteps
 
 Let's look at some summary statistics for the activity
-```{r}
+
+```r
 summary(activity)
 ```
 
+```
+##      steps                date          interval     
+##  Min.   :  0.00   2012-10-01:  288   Min.   :   0.0  
+##  1st Qu.:  0.00   2012-10-02:  288   1st Qu.: 588.8  
+##  Median :  0.00   2012-10-03:  288   Median :1177.5  
+##  Mean   : 37.38   2012-10-04:  288   Mean   :1177.5  
+##  3rd Qu.: 12.00   2012-10-05:  288   3rd Qu.:1766.2  
+##  Max.   :806.00   2012-10-06:  288   Max.   :2355.0  
+##  NA's   :2304     (Other)   :15840
+```
+
 ## Now create a basic histogram of the steps
-```{r}
+
+```r
 m <- ggplot(dailySteps, aes(x=numSteps))
 m + geom_histogram(aes(fill= ..count..),binwidth=1500)
 ```
 
+![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4-1.png) 
+
 # WHAT IS THE AVERAGE DAILY ACTIVITY PATTERN?
 1. Make a time series plot (i.e. type = “l”) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
 
-```{r}
+
+```r
 IntervalTimeSeries <- activity %>%
   group_by(interval) %>%
   summarise(NumRecords = n(),MeanStepsForInterval = mean(steps,na.rm=TRUE))
@@ -54,8 +72,11 @@ ITS <- ggplot(IntervalTimeSeries, aes(x=interval,y=MeanStepsForInterval))
 ITS + geom_line(color = "blue")
 ```
 
+![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5-1.png) 
+
 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
-```{r}
+
+```r
 RankIntervals <- activity %>%
   group_by(interval) %>%
   summarise(MeanStepsForInterval = mean(steps,na.rm=TRUE)) %>%
@@ -69,29 +90,39 @@ We can see that Interval:835 has the highest average number of steps, and also t
 The presence of missing days may introduce bias into some calculations or summaries of the data.
 1.Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)
 
-```{r}
+
+```r
 sumNA <- summarise(activity, sum = sum(is.na(steps)))
 sumNA #2304
 ```
 
+```
+## Source: local data frame [1 x 1]
+## 
+##    sum
+## 1 2304
+```
+
 2. Devise a strategy for filling in all of the missing values in the dataset
 
-```{r}
+
+```r
 MEAN <- summarise(activity, mean = mean(is.na(steps))) #.1311475
 ```
 
 3.Replace NA step values with the mean value for 5mins window & create new data set
 
-```{r}
+
+```r
 filled <- activity %>%
   mutate(steps = replace(steps, is.na(steps), mean(steps, na.rm =TRUE))) 
-  
 ```
 
 4.Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. NOTE that filling the way that I did makes the mean=median
 
 Calc the daily number of steps along with the mean and median
-```{r}
+
+```r
 dailyFilledSteps <- filled %>%
   group_by(date) %>%
   summarise(numSteps = sum(steps)) %>%
@@ -99,17 +130,21 @@ dailyFilledSteps <- filled %>%
 ```
 
 Make the histogram
-```{r}
+
+```r
 FilledSteps<- ggplot(dailyFilledSteps, aes(x=numSteps))
 FilledSteps + geom_histogram(aes(fill = ..count..),binwidth=1500) + scale_fill_gradient("Count", low = "red", high = "blue")
 ```
+
+![plot of chunk unnamed-chunk-11](figure/unnamed-chunk-11-1.png) 
 
 #Are there differences in activity patterns between weekdays and weekends?
 For this part the weekdays() function may be of some help here. Use the dataset with the filled-in missing values for this part.
 
 1.Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
 If weekday is Saturday or Sunday, replace with ‘weekend’, else replace with ‘weekday’, use those as factors
-```{r}
+
+```r
 dayCategories <- filled %>%
   mutate(TypeOfDay=weekdays(as.Date(date))) %>%
   mutate(TypeOfDay = as.factor(ifelse(TypeOfDay == "Saturday" | TypeOfDay == "Sunday","Weekend","Weekday"))) %>%
@@ -118,8 +153,11 @@ dayCategories <- filled %>%
 ```
 
 2.Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). 
-```{r}
+
+```r
 CategoryPlot <- ggplot(dayCategories, aes(x=interval, y= AvgStepsPerInterval))
 CategoryPlot + facet_wrap(~TypeOfDay, ncol=1) + geom_line(aes(color = factor(TypeOfDay)))
 ```
+
+![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-13-1.png) 
 
